@@ -1,7 +1,7 @@
 #ifndef LIBRARY_HPP
 #define LIBRARY_HPP
 
-#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -75,6 +75,26 @@ void draw(const document_t& x, std::ostream& out, size_t position)
     for (const auto& e: x)
         draw(e, out, position + 2);
     out << std::string(position, ' ') << "</document>" << '\n';
+}
+
+using history_t = std::vector<document_t>;
+
+void commit(history_t& x)
+{
+    assert(x.size());
+    x.push_back(x.back());
+}
+
+void undo(history_t& x)
+{
+    assert(x.size());
+    x.pop_back();
+}
+
+document_t& current(history_t& x)
+{
+    assert(x.size());
+    return x.back();
 }
 
 #endif
