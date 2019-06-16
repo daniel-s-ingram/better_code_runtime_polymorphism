@@ -1,10 +1,16 @@
 #ifndef LIBRARY_HPP
 #define LIBRARY_HPP
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
+
+void draw(const std::string& x, std::ostream& out, size_t position)
+{
+    out << std::string(position, ' ') << x << '\n';
+}
 
 void draw(const int& x, std::ostream& out, size_t position)
 {
@@ -14,21 +20,23 @@ void draw(const int& x, std::ostream& out, size_t position)
 class object_t
 {
 public:
-    object_t(const int& x) : self_(std::make_unique<int_model_t>(x))
+    object_t(int x) : self_(std::make_unique<int_model_t>(std::move(x)))
+    { }
+
+    object_t(std::string x) : self_(std::make_unique<string_model_t>(std::move(x)))
+    { }
+
+    object_t(const object_t& x) : self_(x.self_->copy_())
+    { }
+
+    object_t(object_t&&) noexcept = default;
+    
+    object_t& operator=(const object_t& x)
     {
-        std::cout << "ctor\n";
+        return *this = object_t(x);
     }
 
-    object_t(const object_t& x) : self_(std::make_unique<int_model_t>(*x.self_))
-    {
-        std::cout << "copy\n";
-    }
-    
-    object_t& operator=(object_t x) noexcept
-    {
-        self_ = std::move(tmp.self_);
-        return *this;
-    }
+    object_t& operator=(object_t&&) noexcept = default;
 
     friend void draw(const object_t& x, std::ostream& out, size_t position)
     {
@@ -36,11 +44,24 @@ public:
     }
 
 private:
-    struct int_model_t
+    struct concept_t
     {
-        int_model_t(const int& x) : data_(x) {}
+        virtual ~concept_t() = default;
+        virtual std::unique_ptr<concept_t> copy_() const = 0;
+        virtual void draw_(std::ostream&, size_t) const = 0;
+    };
 
-        void draw_(std::ostream& out, size_t position) const
+    struct int_model_t final : concept_t
+    {
+        int_model_t(int x) : data_(std::move(x))
+        { }
+
+        std::unique_ptr<concept_t> copy_() const override
+        {
+            return std::make_unique<int_model_t>(*this);
+        }
+
+        void draw_(std::ostream& out, size_t position) const override
         {
             draw(data_, out, position);
         }
@@ -48,7 +69,25 @@ private:
         int data_;
     };
 
-    std::unique_ptr<int_model_t> self_;
+    struct string_model_t final : concept_t
+    {
+        string_model_t(std::string x) : data_(std::move(x))
+        { }
+
+        std::unique_ptr<concept_t> copy_() const override
+        {
+            return std::make_unique<string_model_t>(*this);
+        }
+
+        void draw_(std::ostream& out, size_t position) const override
+        {
+            draw(data_, out, position);
+        }
+
+        std::string data_;
+    };
+
+    std::unique_ptr<concept_t> self_;
 };
 
 using document_t = std::vector<object_t>;
