@@ -2,23 +2,24 @@
 #define LIBRARY_HPP
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
-using object_t = int;
-
-void draw(const object_t& x, std::ostream& out, size_t position)
+class object_t
 {
-    out << std::string(position, ' ') << x << '\n';
-}
+public:
+    virtual ~object_t() {}
+    virtual void draw(std::ostream&, size_t) const = 0;
+};
 
-using document_t = std::vector<object_t>;
+using document_t = std::vector<std::shared_ptr<object_t>>;
 
 void draw(const document_t& x, std::ostream& out, size_t position)
 {
     out << std::string(position,  ' ') << "<document>" << '\n';
     for (const auto& e: x)
-        draw(e, out, position + 2);
+        e->draw(out, position + 2);
     out << std::string(position, ' ') << "</document>" << '\n';
 }
 
