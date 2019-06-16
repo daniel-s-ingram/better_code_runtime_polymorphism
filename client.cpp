@@ -1,11 +1,13 @@
 #include "library.hpp"
 
 class my_class_t
-{ };
-
-void draw(const my_class_t&, std::ostream& out, size_t position)
 {
-    out << std::string(position, ' ') << "my_class_t\n";
+    friend std::ostream& operator<<(std::ostream& os, const my_class_t& class_t);
+};
+
+std::ostream& operator<<(std::ostream& os, const my_class_t& class_t)
+{
+    os << "my_class_t";
 }
 
 int main()
@@ -14,7 +16,7 @@ int main()
 
     document.emplace_back(0);
     document.emplace_back(std::string("Hello"));
-    document.emplace_back(2);
+    document.emplace_back(document);
     document.emplace_back(my_class_t());
 
     draw(document, std::cout, 0);
